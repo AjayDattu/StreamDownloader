@@ -1,30 +1,36 @@
 const express = require('express');
-const ytdl = require('ytdl-core');
-const cors = require('cors');
-require('dotenv').config();
-
-const port = process.env.PORT || 4000;
-
+const axios = require('axios');
 const app = express();
-app.use(cors());
+const port = 3000;
 
-app.get('/download', async (req, res) => {
-    try {
-        const url = req.query.url;
-        const videoId = await ytdl.getURLVideoID(url);
-        const metaInfo = await ytdl.getInfo(url);
+app.use(express.json()); // for parsing application/json
 
-        let data = {
-            url: 'https://www.youtube.com/embed/' + videoId,
-            info: metaInfo.formats
-        };
+app.post('/get-video-details', async (req, res) => {
+  const { videoId } = req.body;
 
-        return res.send(data);
-    } catch (error) {
-        return res.status(500).send('Error fetching video information');
+  if (!videoId) {
+    return res.status(400).send('Video ID is required');
+  }
+
+  const options = {
+    method: 'GET',
+    url: 'https://youtube-media-downloader.p.rapidapi.com/v2/video/details',
+    params: { videoId },
+    headers: {
+      'x-rapidapi-key': 'f19d73c296msh4416db469383f01p1bec96jsnc051ff7e2d7c',
+      'x-rapidapi-host': 'youtube-media-downloader.p.rapidapi.com'
     }
+  };
+
+  try {
+    const response = await axios.request(options);
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error retrieving video details');
+  }
 });
 
 app.listen(port, () => {
-    console.log(`Server is running on PORT: ${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
