@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import Spline from '@splinetool/react-spline';
 import axios from 'axios';
 
 function LinkP() {
   const [videoId, setVideoId] = useState('');
-  const [videoDetails, setVideoDetails] = useState(null); // State to store video details
-  const [error, setError] = useState(null); // State to store any error
+  const [videoDetails, setVideoDetails] = useState([]);
+  const [error, setError] = useState(null);
 
   const handleDownload = async () => {
     if (videoId.trim() === '') {
@@ -18,23 +17,17 @@ function LinkP() {
         params: { videoId: extractVideoId(videoId) },
       });
 
-      // Ensure response data has a 'videos' field and it's an array
       const videos = response.data.videos || [];
       const filteredVideos = filterVideosByQuality(videos);
 
       if (filteredVideos.length > 0) {
-        // Assuming the first filtered video is the desired one
-        const video = filteredVideos[0];
-        setVideoDetails({
-          title: video.title || 'Unknown Title',
-          downloadLink: video.url || '#', // Update if the URL field is different
-        });
+        setVideoDetails(filteredVideos);
       } else {
-        setVideoDetails(null); // Clear video details if no videos match
-        alert('No videos found with the desired quality.');
+        setVideoDetails([]);
+        alert('No videos found with the desired quality and audio.');
       }
 
-      setError(null); // Reset error on successful fetch
+      setError(null);
       alert('Video details fetched successfully!');
     } catch (error) {
       console.error(error);
@@ -43,9 +36,23 @@ function LinkP() {
     }
   };
 
-  // Function to filter videos based on quality (e.g., 360p)
   const filterVideosByQuality = (videos) => {
-    return videos.items.filter(video => video.quality === '360p'); // Change '360p' to any quality you need
+    const qualities = ['360p', '720p', '1080p'];
+    const filteredVideos = [];
+
+    qualities.forEach((quality) => {
+      const videosOfQuality = videos.items.filter(
+        (video) => video.quality === quality && video.hasAudio
+      );
+      if (videosOfQuality.length > 0) {
+        filteredVideos.push({
+          quality,
+          videos: videosOfQuality,
+        });
+      }
+    });
+
+    return filteredVideos;
   };
 
   const extractVideoId = (url) => {
@@ -55,54 +62,69 @@ function LinkP() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 h-screen p-2">
-      <div className="flex justify-center items-center">
-        <div className="w-full h-64 sm:h-80 md:h-96">
-          <Spline
-            scene="https://prod.spline.design/U45h15kJH1rvnz6H/scene.splinecode"
-            style={{ width: '100%', height: '100%' }}
-          />
-        </div>
-      </div>
+    <div className="relative flex justify-center items-center h-screen">
+      {/* Iframe as the background */}
+      <iframe
+        src="https://lottie.host/embed/131618d0-608f-4aeb-b681-5dcf015bf8aa/xzFv9dQHgy.json"
+        className="absolute inset-0 w-full h-full"
+        style={{ zIndex: -1 }}
+        frameBorder="0"
+      ></iframe>
 
-      <div className="flex flex-col justify-center items-center space-y-4">
-        <label className="text-gray-700 font-semibold" htmlFor="youtube-link">
+      {/* Content */}
+      <div className="flex flex-col justify-center items-center space-y-6 p-8 relative z-10 max-w-lg w-full">
+        <label className="text-gray-700 font-semibold text-lg" htmlFor="youtube-link">
           YouTube link here
         </label>
         <input
           id="youtube-link"
           type="text"
-          className="border rounded-md p-2 w-full max-w-md text-gray-700"
+          className="border rounded-md p-4 text-lg w-full text-gray-700"
           placeholder="Enter YouTube link"
           value={videoId}
           onChange={(e) => setVideoId(e.target.value)}
         />
-        <button className="Btn" onClick={handleDownload}>
-          <svg className="svgIcon" viewBox="0 0 384 512" height="1em" xmlns="http://www.w3.org/2000/svg">
+        <button className="Btn px-6 py-3 text-lg flex items-center space-x-2" onClick={handleDownload}>
+          <svg
+            className="svgIcon h-6 w-6"
+            viewBox="0 0 384 512"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <path d="M169.4 470.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L224 370.8 224 64c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 306.7L54.6 265.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z"></path>
           </svg>
-          <span className="icon2"></span>
           <span className="tooltip">Download</span>
         </button>
 
-        {/* Display error if any */}
-        {error && <p className="text-red-500">{error}</p>}
+        {error && <p className="text-red-500 text-lg">{error}</p>}
 
-        {/* Display video details below the input field */}
-        {videoDetails && (
-          <div className="w-full max-w-md mt-4">
-            <h3 className="font-semibold text-lg">Downloaded Video Details:</h3>
-            <div className="border rounded-md p-4 bg-gray-100">
-              <p className="font-semibold">Title: {videoDetails.title}</p>
-              <a
-                href={videoDetails.downloadLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 underline"
-              >
-                Download Video
-              </a>
-            </div>
+        {videoDetails.length > 0 && (
+          <div className="w-full mt-6">
+            <h3 className="font-semibold text-lg">
+              Downloaded Video Details by Quality:
+            </h3>
+            {videoDetails.map((category) => (
+              <div key={category.quality} className="mb-6">
+                <h4 className="font-semibold text-md">{category.quality} Videos</h4>
+                {category.videos.map((video, index) => (
+                  <div
+                    key={index}
+                    className="border rounded-md p-4 bg-gray-100"
+                  >
+                    <p className="font-semibold text-md">
+                      Title: {video.title || 'Unknown Title'}
+                    </p>
+                    <a
+                      href={video.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 underline text-md"
+                    >
+                      Download Video
+                    </a>
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
         )}
       </div>
