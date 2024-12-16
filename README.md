@@ -3,7 +3,6 @@
 StreamDownloader is a lightweight YouTube video downloader application that allows users to download YouTube videos quickly and efficiently. Built with modern web technologies, it provides a simple user interface for fetching and downloading videos in different formats.
 
 ## Features
-
 - **Download YouTube Videos**: Stream and download YouTube videos directly to your device.
 - **Multiple Formats**: Supports downloading videos in various formats (MP4, WebM, etc.).
 - **Video Quality Selection**: Choose from multiple video resolutions (720p, 1080p, 4K, etc.).
